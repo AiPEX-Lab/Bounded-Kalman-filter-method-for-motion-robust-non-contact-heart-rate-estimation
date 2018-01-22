@@ -14,4 +14,3 @@ If you use any of the resources provided on this page in any of your publication
 
 Arul Prakash, Sakthi Kumar and Tucker, Conrad, "A Bounded Kalman Filter Method for Motion-Robust, Non-Contact Heart Rate Estimation," Biomedical Optics Express (2018) 
 
-In addition to citing this work, please also cite papers whose methods have been adapted in the work.
