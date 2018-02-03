@@ -12,5 +12,5 @@ In this paper (A Bounded Kalman Filter Method for Motion-Robust, Non-Contact Hea
 ## Citation
 If you use any of the resources provided on this page in any of your publications we ask you to cite the following work.
 
-Arul Prakash, Sakthi Kumar and Tucker, Conrad, “Bounded Kalman filter method for motion-robust, non-contact heart rate estimation”, in Biomedical Optics Express Vol.9 Issue 2  2018 edition, DOI: 10.1364/BOE.9.000873.
+Prakash, S. K. A., & Tucker, C. S. (2018). Bounded Kalman filter method for motion-robust, non-contact heart rate estimation. Biomedical Optics Express, 9(2), 873-897.DOI: 10.1364/BOE.9.000873.
 
