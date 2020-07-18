@@ -17,7 +17,8 @@ If you plan on estimating heart rate for a video, please make sure to tweak the 
 2. Moving window: In the paper, we set window size (line 579 in "Proposed Algorithm_Main Program.py") as 30 seconds for an accurate estimation with the window stride being 1 second (line 605 in "Proposed Algorithm_Main Program.py").
 3. Butter bandpass filter paramaters: Order, low-cut frequency and high-cut frequency (line 589-592 in "Proposed Algorithm_Main Program.py"). We find that the order parameter affects estimation accuracy and hence should be tuned according to the dataset.
 4. Real-time graph (optional): Please refer to the comments on the script "Proposed Algorithm_Main Program.py" for more details on which lines to uncomment in order to enable the real-time graph.
-5. Output pulse rate: 
+5. Output pulse rate: By default, the output pulse rates are written to a text file titled "test.txt".
+
 ## Citation
 If you use any of the resources provided on this page in any of your publications we ask you to cite the following work.
 
