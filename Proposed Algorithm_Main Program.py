@@ -1,4 +1,3 @@
-
 # import the necessary packages
 from __future__ import division
 from common import analyze_channels
@@ -34,7 +33,7 @@ import sys
 from scipy.interpolate import interp1d
 from sklearn.decomposition import FastICA, PCA
 from multiprocessing import Process, Lock
-previous = 70
+previous = 0
 dataset = [0 for i in range(10)]
 
 
@@ -73,8 +72,6 @@ def openGraph(lock):
     data = [previous for i in xrange(10)]
     l, = plt.plot(data, 'r-')
     plt.ylim(40, 180)
-
-
     line_ani = animation.FuncAnimation(fig1, update_line, fargs=(data, l), interval=1000, blit=False)
     plt.show()
 #Estimate frequency from peak of FFT
@@ -164,11 +161,12 @@ def selectROI(event, x, y, flags, param):
 
 
 #main program
+# def main(lock2):
 def main():
+
     # construct the argument parse and parse the arguments
     ap = argparse.ArgumentParser()
-    ap.add_argument("-v", "--video",
-                    help="path to the (optional) video file")
+    ap.add_argument("-v", "--video", help="Input a video")
     args = vars(ap.parse_args())
 
     # grab the reference to the current frame, list of ROI
@@ -205,21 +203,19 @@ def main():
     countdowntime = 1
     result = []
     topleft, bottomleft, topright, bottomright = (0, 0), (0, 0), (0, 0), (0, 0)
-    cuthigh = 30
+    cuthigh = 10
     currentcount = 5
-    prevout, out6 = 0.0, 60.81
-    persecond = 5
     ptsss = [(0, 0) for i in range(15)]
     ctd = "Calibrating"
 
     # reading the next frame frame and starting time
     nextframe = camera.read()
     start_time = time.time()
-    tttt = 0
-    # creaating a file for writing
-    textFile = open('test.txt', 'w')
-    # out = cv2.VideoWriter('output.avi', -1, 20.0, (640, 480))
-
+    # creating a file for writing
+    textFilee = open('test.txt', 'w') #this textfile records all heart rate values until the end of video or 'q' is pressed
+    # saving the frames as .mp4 video
+    # fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+    # out = cv2.VideoWriter('original_vid.mp4', fourcc, 25.0, (480, 640))
     # keep looping over the frames
     while True:
         # setting face not detected to begin with
@@ -239,7 +235,7 @@ def main():
 
         # grab the current frame
         (grabbed, frame) = camera.read()
-        # resizing the drame
+        # resizing the frame
         frame =  cv2.resize(frame, (640, 480))
         # copying the frame
         HSVframe = copy.copy(frame)
@@ -552,13 +548,7 @@ def main():
 
             # upldating frame number and storing the mean
             frameno = frameno + 1
-            tttt = tttt + 1
-#print frameno/start_time
             end_time = time.time() #record end time of program
-            #if tttt==300:
-                #fps = tttt/ float(end_time - start_time)
-                #print tttt
-                #print float(end_time - start_time)
             meanlist.append(totalmean)
             listoftimes.append(frameno)
 
@@ -582,38 +572,28 @@ def main():
 
             # checking if enough samples are collected
             # Following is all the signal processing steps
-            if len(alll) >= 150 + cutlow:     # fps = 30 frames/second, 300frames = 10 second window (30frames *10seconds)
+            if len(alll) >= 125 + cutlow:     # fps = 30 frames/second, 300frames = 10 second window (30frames *10seconds)
                 HRready = True
-                # print("all  ",alll)
-                # global q,w,e
                 global hr
-                FPS = 30.00
+                FPS =25.00
                 WINDOW_TIME_SEC = 5
                 WINDOW_SIZE = int(np.ceil(WINDOW_TIME_SEC * FPS))
                 windowStart = len(alll) - WINDOW_SIZE
-                # print("WS", WINDOW_SIZE)
-                # print("windowStart", windowStart)
                 window = alll[windowStart: windowStart + WINDOW_SIZE]
                 window = np.asarray(window)
-                ica = FastICA(whiten=False)
+                # ica = FastICA(whiten=False)
                 window = (window - np.mean(window, axis=0)) / np.std(window, axis=0)  # signal normalization
-                # S = np.c_[array[cutlow:], array_1[cutlow:], array_2[cutlow:]]
-                # S /= S.std(axis=0)
-                # ica = FastICA(n_components=3)
-                # print(np.isnan(window).any())
-                # print(np.isinf(window).any())
-                # ica = FastICA()
-                window = np.reshape(window, (150, 1))
-                S = ica.fit_transform(window)  # ICA Part
-                fs = 30.0
+                window = np.reshape(window, (125, 1))
+                # S = ica.fit_transform(window)  # ICA Part
+                fs = FPS
                 lowcut = 0.75
-                highcut = 4.0
-                detrend = scipy.signal.detrend(S)
-                y = butter_bandpass_filter(detrend, lowcut, highcut, fs, order=3)
+                highcut = 2.5
+                detrend = scipy.signal.detrend(window)
+                y = butter_bandpass_filter(detrend, lowcut, highcut, fs, order=5)
                 powerSpec = np.abs(np.fft.fft(y, axis=0)) ** 2
-                freqs = np.fft.fftfreq(150, 1.0 / 30)
-                MIN_HR_BPM = 50.0
-                MAX_HR_BMP = 110.0
+                freqs = np.fft.fftfreq(window.shape[0], 1.0 / fs)
+                MIN_HR_BPM = 45.0
+                MAX_HR_BMP = 150.0
                 MAX_HR_CHANGE = 2.0
                 SEC_PER_MIN = 60
                 maxPwrSrc = np.max(powerSpec, axis=1)
@@ -622,7 +602,7 @@ def main():
                 validFreqs = freqs[validIdx]
                 maxPwrIdx = np.argmax(validPwr)
                 hr = validFreqs[maxPwrIdx]
-                cutlow = cutlow + 5
+                cutlow = cutlow + FPS
                 out6 = hr * 60
                 result.append(out6)
                 ave = np.asarray(result)
@@ -630,11 +610,11 @@ def main():
 
                 global previous
                 previous = out6
-                #lock2.acquire()
-                textFile = open('bpmTemp.txt', 'w')
+                # lock2.acquire() # uncomment this if graph is required
+                textFile = open('bpmTemp.txt', 'w') #this textfile updates the graph if graph option is uncommented 
                 textFile.write(str(out6))
-                # textFile.close()
-                #lock2.release()
+                textFile.close()
+                # lock2.release() # uncomment this if graph is required
 
                 tao = str('%.2f' % (out6))
 
@@ -642,7 +622,7 @@ def main():
                 if enterif == False:
                     cv2.putText(frame, ce, (30, 30), cv2.FONT_HERSHEY_PLAIN, 1.5, (0, 0, 255))
                 if writetext == True:
-                    textFile.write(tao + '\n')
+                    textFilee.write(tao + '\n') #this textfile records all heart rate values until the end of video or 'q' is pressed
 
             else:
                 if enterif == False:
@@ -660,7 +640,7 @@ def main():
                         cv2.putText(frame, fe, (30, 30), cv2.FONT_HERSHEY_PLAIN, 1.5, (0, 0, 255))
         cv2.imshow("frame", frame)
         cv2.imwrite("frame.jpg",frame)
-        #out.write(frame)
+        # out.write(frame) #comment out if saving video output
         key = cv2.waitKey(1) & 0xFF
 
         # handle if the 'i' key is pressed, then go into ROI
@@ -727,15 +707,17 @@ def main():
         elif key == ord("t"):
             writetext = True
 
-    textFile.close()
+    # textFile.close()
+    textFilee.close()
     # cleanup the camera and close any open windows
     camera.release()
-    # out.release()
+    # out.release() #comment out if saving video output
     cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
     main()
+    ## If you want a real-time graph along with HR estimation, comment the line above and line 165, uncomment all lines below and line 164, 624, 628
     # lock = Lock()
     # lock2 = Lock()
     # p1 = Process(target=openGraph, args=((lock),))
